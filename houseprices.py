@@ -2,43 +2,25 @@
 # coding: utf-8
 
 # In[1]:
-
-import os
 import pandas as pd
 import numpy as np
 import seaborn as sns; sns.set()
 import matplotlib.pyplot as plt
-get_ipython().magic('matplotlib qt5')
 from mpl_toolkits.mplot3d import Axes3D
-os.listdir('.')
+from sklearn import linear_model as lm
+df = pd.read_csv('train.csv')
+dftest = pd.read_csv("test.csv")
 
+#%%
+sns.heatmap(df.corr(), vmin=0, vmax=1)
 
 # In[2]:
 
-df = pd.read_csv('train.csv')
-corrmat=df.corr()
-corrmat
-
-
-# In[65]:
-
-df2=pd.DataFrame(corrmat["SalePrice"])
-df2.sort_values("SalePrice")
-
-
-# In[67]:
-
-asd = sns.heatmap(df.corr(), vmin=0, vmax=1)
-
-
-# In[3]:
-
-plt.scatter(df["OverallQual"],df["SalePrice"])
+pd.DataFrame(df.corr()["SalePrice"]).sort_values("SalePrice")
 
 
 # In[78]:
-
-#plt.scatter(df["OverallQual"],df["GrLiveArea"],df["SalePrice"])
+plt.scatter(df["OverallQual"],df["SalePrice"])
 
 
 # In[4]:
@@ -54,58 +36,68 @@ plt.show()
 
 # In[6]:
 
-from sklearn import linear_model as lm
-
-
-# In[16]:
-
 lr = lm.LinearRegression()
 X = df[["OverallQual","GrLivArea"]]
 y = df.SalePrice
 xpred = lr.fit(X, y)
 
-
-# In[25]:
-
-print lr.score(X,y)
+print("R2 = " + str(lr.score(X,y))) #R2 = 0.71
 
 
 # In[35]:
 
 dftest = pd.read_csv("test.csv")
-test = test[["OverallQual","GrLivArea"]]
-
-
-# In[39]:
-
+test = dftest[["OverallQual","GrLivArea"]]
 pred=lr.predict(test)
 
-
-# In[76]:
-
-pred<0
-
-
-# In[116]:
-
-dfpred = pd.DataFrame([dftest.Id, pred],
-                      dtype=object)
-dfpred = dfpred.transpose()
-dfpred.columns=["Id", 'SalePrice']
+dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.loc[pred<30000,"SalePrice"]=30000
 
-
-# In[117]:
-
 dfpred.astype(int).to_csv("submission1.csv", index = False)
-
-
-# In[ ]:
-
+print(" With this prediction we got 1419th place with a score of 0.22752")
 
 
 
-# In[119]:
+#%%  2n try: linear regression model with quadratic features
 
-df.DataFramdf.OverallQual**2
+x1 = df.OverallQual**2
+
+X = pd.concat([df.OverallQual**2,
+                    df.OverallQual,
+                    df.OverallQual * df.GrLivArea,
+                    df.GrLivArea,
+                    df.GrLivArea**2],    axis = 1)
+    
+X.columns = ["oq2","oq","oqsp","sp","sp2"]
+y = df.SalePrice
+test = pd.concat([dftest.OverallQual**2,
+                    dftest.OverallQual,
+                    dftest.OverallQual * dftest.GrLivArea,
+                    dftest.GrLivArea,
+                    dftest.GrLivArea**2],    axis = 1)
+#%%
+model2 = lr.fit(X,y)
+print("R2 = " + str(lr.score(X,y)))
+pred2 = model2.predict(test) #R2 = 0.77
+
+dfpred2 = pd.concat([dftest.Id, 
+                     pd.DataFrame(pred2, columns = ["SalePrice"])],
+                    axis = 1)
+dfpred2.to_csv("submission2.csv",index = False)
+print(" With this prediction we got 1382th place with a score of 0.21050")
+
+#%%
+
+
+
+
+
+
+
+
+
+
+
+
+
 
