@@ -1,0 +1,5 @@
+DUMMIES - pensámos em utilizar algumas variáveis no formato de categorias (e.g. MSZoning) para efectuar diferentes regressões para diferentes categorias e assim refinar as previsões
+
+REGRESSION TREE?
+
+REGRESSORES DISCRETOS - como devemos abordar o facto de usarmos regressores discretos? por exemplo, o regressor da overall quality toma valores discretos entre 1 e 8. Ou nos casos em que temos categorias, não será de fazer algo com clusters?
