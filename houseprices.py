@@ -52,7 +52,7 @@ pred=lr.predict(test)
 
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.loc[pred<30000,"SalePrice"]=30000
-
+dfpred.to_csv("submission1.csv", index = False)
 dfpred.astype(int).to_csv("submission1.csv", index = False)
 print(" With this prediction we got 1419th place with a score of 0.22752")
 
