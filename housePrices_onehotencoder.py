@@ -16,6 +16,9 @@ from sklearn import linear_model as lm
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 df = pd.read_csv('train.csv')
+
+# Use the log of saleprice!!
+df["logSalePrice"] = np.log(df.SalePrice)
 dftest = pd.read_csv("test.csv")
 
 #%% boxplot of categorical features
@@ -34,12 +37,19 @@ X = pd.concat([df.OverallQual,
                     df.GrLivArea**2],    axis = 1)
 onehotencoder = OneHotEncoder(categorical_features=[0])
 X = onehotencoder.fit_transform(X).toarray()
-y = df.SalePrice
+y = df["logSalePrice"]
 xpred = lr.fit(X, y)
 
 print("R2 = " + str(lr.score(X,y))) #R2 = 0.76
+weights = xpred.coef_
+weights = 100.0*np.abs(weights)/np.abs(weights).sum()
+# not a fair comparison since the feats are not normalized, that's why the living area (last 2) has weights ~0
+# Nevertheless it can tell us what quality is more significant to the model...
+print("Weight of each feature to the model:")
+for i,j in enumerate(weights):
+    print("Feat {0}: {1} %".format(i,round(j,1)))
 
-#%%
+#%% predict test
 
 Xt = pd.concat([dftest.OverallQual,
                     dftest.GrLivArea,
@@ -52,8 +62,8 @@ Xt = onehotencoder.fit_transform(Xt).toarray()
 pred2 = xpred.predict(Xt)
 
 dfpred2 = pd.concat([dftest.Id, 
-                     pd.DataFrame(pred2, columns = ["SalePrice"])],
+                     pd.DataFrame(np.exp(pred2), columns = ["SalePrice"])],
                     axis = 1)
 dfpred2.astype(int).to_csv("submission_onehot.csv",index = False)
 
-print("This submission yielded a score of 0.20251 which corresponded to 1413th place as of 27/09")
+print("This submission yielded a score of 0.19156 which corresponded to 1484th place as of 30/09")
