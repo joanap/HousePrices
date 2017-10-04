@@ -22,7 +22,6 @@ df["logSalePrice"] = np.log(df.SalePrice)
 dftest = pd.read_csv("test.csv")
 
 #%% boxplot of categorical features
-data = df[["OverallQual","SalePrice"]]
 sns.boxplot(x=df["OverallQual"],y=df["SalePrice"])
 
 sns.boxplot(x=df["HeatingQC"],y=df["SalePrice"])
@@ -67,3 +66,11 @@ dfpred2 = pd.concat([dftest.Id,
 dfpred2.astype(int).to_csv("submission_onehot.csv",index = False)
 
 print("This submission yielded a score of 0.19156 which corresponded to 1484th place as of 30/09")
+
+#%% Function that receives vector of features to use to train the linear regr. model and returns R2
+lr = lm.LinearRegression()
+numdf = df.select_dtypes(include=[np.number]).drop(["Id","logSalePrice","SalePrice"],1)
+model = lr.fit(numdf[numdf.columns[0]])
+
+for i in range(1:38):
+    
