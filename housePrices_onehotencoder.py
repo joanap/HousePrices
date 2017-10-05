@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 %matplotlib qt5
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import linear_model as lm
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
 
 df = pd.read_csv('train.csv')
 
@@ -70,7 +70,28 @@ print("This submission yielded a score of 0.19156 which corresponded to 1484th p
 #%% Function that receives vector of features to use to train the linear regr. model and returns R2
 lr = lm.LinearRegression()
 numdf = df.select_dtypes(include=[np.number]).drop(["Id","logSalePrice","SalePrice"],1)
-model = lr.fit(numdf[numdf.columns[0]])
+imputer = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
 
-for i in range(1:38):
+x = numdf.values
+imputer = imputer.fit(x)
+x = imputer.transform(x)
+dfclean = pd.DataFrame(x)
+y = df["logSalePrice"]
+
+def calc_r2(vfeats):
+    x = dfclean[vfeats]
+    model = lr.fit(x,y)
+    r2 = model.score(x,y)
+    n = len(x)
+    k = len(x.columns)
+    return 1 - (1-r2)*(n-1)/(n-k-1)
+
+l_r2 = []
+for i in range(len(numdf.columns)):
+    r2ajd = calc_r2([3,15,5,4,i])
+    l_r2.append([i,r2ajd])
+    print("Feat {} R2: {}".format(i,r2ajd))
     
+nplr2 = np.array(l_r2)
+np.max(nplr2[:,1])
+np.argmax(nplr2[:,1])
