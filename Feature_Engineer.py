@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import linear_model as lm
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
+from sklearn.metrics import mean_squared_error
 
 df = pd.read_csv('train.csv')
 dftest = pd.read_csv("test.csv")
@@ -74,3 +75,19 @@ pred=np.exp(lr.predict(df_testclean[vfeats[:14]]))
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_14feats.csv", index = False)
 ### "Your submission scored 0.14355, "  1083rd place!!!!
+
+#cross validation
+def crossValidation(inputSet):
+    kf = KFold(n_splits=10)
+    for train, test in kf.split(inputSet):   
+        #print("%s %s" % (train, test))
+        lr.fit(inputSet.loc[train], y.loc[train])
+        pred_cv = lr.predict(inputSet.loc[test])
+        mean_squared_error(y.loc[test], pred_cv)
+
+crossValidation(dfclean[vfeats[:14]])
+
+
+        
+        
+        
