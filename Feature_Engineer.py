@@ -62,11 +62,12 @@ for num_feats in range(m):
     print("{} features. Max adj R2 of {}. New feat added was {}:{}".format(num_feats + 1, R2_max,arg_R2_max,numdf.columns[arg_R2_max]))
     vfeats.append(arg_R2_max)
     res.append([num_feats,R2_max])
+    
 res = np.array(res)
 plt.scatter(res[:,0],res[:,1])
+X=vfeats[:19]
 
-#%% predict using 14 first features
-X=vfeats[:14]
+#%% predict using 19 first features
 FinalModel = lr.fit(dfclean[X],y)
 
 pred=np.exp(lr.predict(df_testclean[vfeats[:14]]))
@@ -74,3 +75,23 @@ pred=np.exp(lr.predict(df_testclean[vfeats[:14]]))
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_14feats.csv", index = False)
 ### "Your submission scored 0.14355, "  1083rd place!!!!
+
+#%% predict using ridge regression
+reg = lm.RidgeCV(alphas = [0.01,0.02,0.03,0.5,0.7,.9],normalize=True)
+reg.fit(dfclean[X],y)
+reg.alpha_
+
+pred=np.exp(reg.predict(df_testclean[vfeats[:19]]))
+
+dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
+dfpred.to_csv("submission_ridge.csv", index = False)
+# score=0.14298 even worse booo 
+#%% Let's try Lasso
+regl = lm.LassoCV(alphas = [1e-5,1e-4,1e-3,1e-2,1e-1],normalize=True)
+regl.fit(dfclean[X],y)
+regl.alpha_
+
+pred=np.exp(regl.predict(df_testclean[vfeats[:19]]))
+
+dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
+dfpred.to_csv("submission_Lasso.csv", index = False)
