@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import linear_model as lm
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
+from sklearn.metrics import mean_squared_error
 
 df = pd.read_csv('train.csv')
 dftest = pd.read_csv("test.csv")
@@ -76,6 +77,7 @@ dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_14feats.csv", index = False)
 ### "Your submission scored 0.14355, "  1083rd place!!!!
 
+<<<<<<< HEAD
 #%% predict using ridge regression
 reg = lm.RidgeCV(alphas = [0.01,0.02,0.03,0.5,0.7,.9],normalize=True)
 reg.fit(dfclean[X],y)
@@ -95,3 +97,20 @@ pred=np.exp(regl.predict(df_testclean[vfeats[:19]]))
 
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_Lasso.csv", index = False)
+=======
+#cross validation
+def crossValidation(inputSet):
+    kf = KFold(n_splits=10)
+    for train, test in kf.split(inputSet):   
+        #print("%s %s" % (train, test))
+        lr.fit(inputSet.loc[train], y.loc[train])
+        pred_cv = lr.predict(inputSet.loc[test])
+        mean_squared_error(y.loc[test], pred_cv)
+
+crossValidation(dfclean[vfeats[:14]])
+
+
+        
+        
+        
+>>>>>>> 6ea1b5dfa12e4cac6ab69837134c1f09e08c0f3d
