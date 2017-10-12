@@ -75,27 +75,38 @@ xt_test = DataFrameImputer().fit_transform(X_test)
 dfbinary = pd.get_dummies(xt)
 dfbinary_test = pd.get_dummies(xt_test)
 
+# add columns that don't have categories in the test set
+for i,j in enumerate(dfbinary.columns):
+    if j not in dfbinary_test:
+        dfbinary_test.insert(i,j,0)
+# test both datasets now have the same columns:
+print((dfclean.columns == df_testclean.columns).all())
+
 dfclean = pd.concat([dfclean, dfbinary], axis=1)
 df_testclean = pd.concat([df_testclean, dfbinary_test], axis=1)
 
 
 
 #%% Function that receives vector of features to use to train the linear regr. model and returns R2
+# Splitting the dataset into training and testing set
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(dfclean, y, test_size = 0.3)
+
 lr = lm.LinearRegression()
 
 def calc_r2(vfeats):
     column_name = dfclean.columns[vfeats]
-    x = dfclean[column_name]
-    model = lr.fit(x,y)
-    r2 = model.score(x,y)
-    n = len(x)
-    k = len(x.columns)
+    model = lr.fit(X_train[column_name],y_train)
+    r2 = model.score(X_test[column_name],y_test)
+    n = len(X_train)
+    k = len(vfeats)
     return 1 - (1-r2)*(n-1)/(n-k-1)
 
 #%% 
 
 vfeats = []
 res= []
+
 m = len(dfclean.columns)
 previous_r2 = 0
 for num_feats in range(m):
@@ -121,10 +132,25 @@ plt.scatter(res[:,0],res[:,1])
 
 #%% predict using best features
 
-X=vfeats[:129]
-FinalModel = lr.fit(dfclean[X],y)
+X=dfclean.iloc[:,vfeats]
+Xt=df_testclean.iloc[:,vfeats]
+FinalModel = lr.fit(X,y)
 
-pred=np.exp(lr.predict(df_testclean[vfeats[:129]]))
+pred=np.exp(lr.predict(Xt))
 
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_best_feats.csv", index = False)
+
+
+#vfe Let's try Ridge (perofrms better than Lasso)
+regl = lm.RidgeCV(alphas = [1e-2,3e-2,1e-1,3e-1,1,3,10],normalize=True)
+regl.fit(X,y)
+print(regl.alpha_)
+
+pred=np.exp(regl.predict(Xt))
+
+dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
+dfpred.to_csv("submission_Ridge.csv", index = False)
+
+# score=0.13833... 59 places up!!! using the following feats: 
+#vfeats = [3, 15, 5, 4, 12, 25, 69, 108, 8,36, 2, 49, 90,40, 70, 178, 23, 282, 61, 182, 93, 56, 88, 170, 74, 28]
