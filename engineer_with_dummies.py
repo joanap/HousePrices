@@ -12,6 +12,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import linear_model as lm
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold
+import sys
+import math
 
 df = pd.read_csv('train.csv')
 dftest = pd.read_csv("test.csv")
@@ -102,38 +106,54 @@ def calc_r2(vfeats):
     k = len(vfeats)
     return 1 - (1-r2)*(n-1)/(n-k-1)
 
+#cross validation
+def crossValidation(inputSet):
+    k = 10
+    kf = KFold(n_splits=k)
+    media = 0.0
+    for train, test in kf.split(inputSet):   
+        #print("%s %s" % (train, test))
+        lr.fit(inputSet.loc[train], y.loc[train])
+        pred_cv = lr.predict(inputSet.loc[test])
+        mse = mean_squared_error(y.loc[test], pred_cv)
+        media += mse
+    return media/k
+
 #%% 
 
 vfeats = []
 res= []
 
 m = len(dfclean.columns)
-previous_r2 = 0
+previous_mse = sys.float_info.max
 for num_feats in range(m):
     l_r2 = []
+    l_mse = []
     for i in range(m):
         if not i in vfeats:
-          l_r2.append([i,calc_r2(vfeats + [i])])
-    nplr2 = np.array(l_r2)
-    R2_max = nplr2[:,1].max()
-    arg_R2_max = nplr2[np.argmax(nplr2[:,1]),0].astype(int)
-    if R2_max < previous_r2:
+          #l_r2.append([i,calc_r2(vfeats + [i])])
+          l_mse.append([i, crossValidation(dfclean.iloc[:,vfeats+[i]])])
+    #nplr2 = np.array(l_r2)
+    npl_mse = np.array(l_mse)
+    mse_min = npl_mse[:,1].min()
+    arg_mse_min = npl_mse[np.argmin(npl_mse[:,1]),0].astype(int)
+    if mse_min > previous_mse:
         break
     else:
-        previous_r2 = R2_max
+        previous_mse = mse_min
         
     # print("{} features. Max adj R2 of {}. New feat added was {}:{}".format(num_feats + 1, R2_max,arg_R2_max,numdf.columns[arg_R2_max]))
-    print("{} features. Max adj R2 of {}. New feat added was {}:{}".format(num_feats + 1, R2_max,arg_R2_max,dfclean.columns[arg_R2_max]))
+    print("{} features. Min rmse of {}. New feat added was {}:{}".format(num_feats + 1, math.sqrt(mse_min),arg_mse_min,dfclean.columns[arg_mse_min]))
      
-    vfeats.append(arg_R2_max)
-    res.append([num_feats,R2_max])
+    vfeats.append(arg_mse_min)
+    res.append([num_feats,mse_min])
 res = np.array(res)
 plt.scatter(res[:,0],res[:,1])
 
 #%% predict using best features
 
-X=dfclean.iloc[:,vfeats]
-Xt=df_testclean.iloc[:,vfeats]
+X=dfclean.iloc[:,vfeats[1:30]]
+Xt=df_testclean.iloc[:,vfeats[1:30]]
 FinalModel = lr.fit(X,y)
 
 pred=np.exp(lr.predict(Xt))
