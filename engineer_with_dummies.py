@@ -8,12 +8,14 @@ import pandas as pd
 import numpy as np
 import seaborn as sns; sns.set()
 import matplotlib.pyplot as plt
-#%matplotlib qt5
+%matplotlib qt5
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import linear_model as lm
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
+from sklearn.preprocessing import StandardScaler
 import sys
 import math
 
@@ -33,10 +35,12 @@ imputer = imputer.fit(numdf.values)
 x = imputer.transform(numdf.values)
 xt = imputer.transform(numdf_test.values)
 
-dfclean = pd.DataFrame(x)
-df_testclean = pd.DataFrame(xt)
+dfclean = pd.DataFrame(x,columns = numdf.columns)
+df_testclean = pd.DataFrame(xt,columns = numdf.columns)
 
 y = df["logSalePrice"]
+#%%
+
 
 
 #%% imputing missing values
@@ -85,6 +89,7 @@ for i,j in enumerate(dfbinary.columns):
         dfbinary_test.insert(i,j,0)
 # test both datasets now have the same columns:
 print((dfclean.columns == df_testclean.columns).all())
+assert((dfclean.columns == df_testclean.columns).all())
 
 dfclean = pd.concat([dfclean, dfbinary], axis=1)
 df_testclean = pd.concat([df_testclean, dfbinary_test], axis=1)
@@ -97,6 +102,7 @@ from sklearn.cross_validation import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(dfclean, y, test_size = 0.3)
 
 lr = lm.LinearRegression()
+regl = lm.RidgeCV(alphas = [1e-2,3e-2,1e-1,3e-1,1,3],normalize=True)
 
 def calc_r2(vfeats):
     column_name = dfclean.columns[vfeats]
@@ -131,9 +137,7 @@ for num_feats in range(m):
     l_mse = []
     for i in range(m):
         if not i in vfeats:
-          #l_r2.append([i,calc_r2(vfeats + [i])])
           l_mse.append([i, crossValidation(dfclean.iloc[:,vfeats+[i]])])
-    #nplr2 = np.array(l_r2)
     npl_mse = np.array(l_mse)
     mse_min = npl_mse[:,1].min()
     arg_mse_min = npl_mse[np.argmin(npl_mse[:,1]),0].astype(int)
@@ -141,8 +145,6 @@ for num_feats in range(m):
         break
     else:
         previous_mse = mse_min
-        
-    # print("{} features. Max adj R2 of {}. New feat added was {}:{}".format(num_feats + 1, R2_max,arg_R2_max,numdf.columns[arg_R2_max]))
     print("{} features. Min rmse of {}. New feat added was {}:{}".format(num_feats + 1, math.sqrt(mse_min),arg_mse_min,dfclean.columns[arg_mse_min]))
      
     vfeats.append(arg_mse_min)
@@ -163,7 +165,7 @@ dfpred.to_csv("submission_best_feats.csv", index = False)
 
 
 #vfe Let's try Ridge (perofrms better than Lasso)
-regl = lm.RidgeCV(alphas = [1e-2,3e-2,1e-1,3e-1,1,3,10],normalize=True)
+regl = lm.RidgeCV(alphas = [1e-2,3e-2,1e-1,3e-1,1,3],normalize=True)
 regl.fit(X,y)
 print(regl.alpha_)
 
