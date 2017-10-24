@@ -94,8 +94,19 @@ assert((dfclean.columns == df_testclean.columns).all())
 dfclean = pd.concat([dfclean, dfbinary], axis=1)
 df_testclean = pd.concat([df_testclean, dfbinary_test], axis=1)
 
-
-
+#%% Function to assign a value to a category equal to the average sale price in that category
+def attribute_creater(feature_name, df):
+    new_df = pd.DataFrame()
+    new_df['vals'] = df[feature_name].unique()
+    new_df.index = new_df.vals
+    new_df['means'] = df[[feature_name, 'SalePrice']].groupby(feature_name).mean()['SalePrice']
+    new_df = new_df.sort_values('means')
+    new_df = new_df['means'].to_dict()
+    
+    for cat, o in new_df.items():
+        df.loc[df[feature_name] == cat, feature_name+'_E'] = o
+        
+    return df
 #%% Function that receives vector of features to use to train the linear regr. model and returns R2
 # Splitting the dataset into training and testing set
 from sklearn.cross_validation import train_test_split
