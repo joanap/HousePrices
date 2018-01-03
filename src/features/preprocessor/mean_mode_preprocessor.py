@@ -26,9 +26,11 @@ class Mean_Mode_Preprocessor(AbstractPreprocessor):
     def _calc_missing_num_replacements(self, col):
         return col.mean()
 
-    # replace missing labels with the most common one
+    # replace missing labels with the most common one (only when the NaNs are less than 10% of the full dataset)
     def _calc_missing_cat_replacements(self, col):
-        return col.value_counts().index[0]
+        if col.count() / col.shape[0] > 0.90:
+            return col.value_counts().index[0]
+        return 'NaN'
     
     # For categorical features, replace nan with the string "NaN" and apply labelencoding 
     #(also add the value Nan in case it appears in the test set and not in the train)

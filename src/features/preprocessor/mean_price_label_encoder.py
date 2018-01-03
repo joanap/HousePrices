@@ -20,22 +20,24 @@ from sklearn.preprocessing import LabelEncoder
 
 #%% Implementing class with our one version of the preprocessing methods
 
-class Mean_Mode_Preprocessor(AbstractPreprocessor):
+class Mean_Price_Preprocessor(AbstractPreprocessor):
     
     # replace missing numerical values with the mean
     def _calc_missing_num_replacements(self, col):
         return col.mean()
 
-    # replace missing labels with the most common one
+    # replace missing labels with the most common one (only when the NaNs are less than 10% of the full dataset)
     def _calc_missing_cat_replacements(self, col):
-        return col.value_counts().index[0]    
-    
+        if col.count() / col.shape[0] > 0.90:
+            return col.value_counts().index[0]
+        return 'NaN'
+
+    class myencoder:
+        def transform(self, col):
+            return col
+        
     def _gen_cat_col_encoder(self, col):
-        new_df = pd.DataFrame()
-        new_df['vals'] = col.unique()
-        new_df.index = new_df.vals
-        new_df
-        return LabelEncoder().fit(col.fillna('NaN').append(pd.DataFrame(['NaN'])))
+        return self.myencoder()
     
     # Check if this is training set by looking for the output column called "SalePrice"
     def _is_trainning_set(self, dataframe):
@@ -71,6 +73,6 @@ if __name__ == '__main__':
     train_dataframe = pd.read_csv('..\\input\\train.csv', index_col='Id')
     test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
 
-    data_preprocessor = Mean_Mode_Preprocessor()
-    eng_train_dataset = data_preprocessor.prepare(train_dataframe)
+    data_preprocessor = Mean_Price_Preprocessor()
+    eng_train_dataset = data_preprocessor.prepare_and_cook(train_dataframe)
     eng_test_dataset = data_preprocessor.cook(test_dataframe)
