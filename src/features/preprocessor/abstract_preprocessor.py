@@ -11,7 +11,7 @@ The idea is to remove all that part from the main code in order to make it clean
 This class should be extended and the abstract methods implemented with the preprocessing methods of your choice.
 """
 
-#%% Import onyl the necessary libraries
+#%% Import only the necessary libraries
 from features.abstract_features import AbstractFeatures 
 from abc import ABCMeta
 from abc import abstractmethod
@@ -28,7 +28,9 @@ class AbstractPreprocessor(AbstractFeatures):
             self._cols_to_predict = output_cols
         else:
             self._cols_to_predict = [output_cols]
-    
+        #since we may want to add columns from the one to predict we need to store the original ones
+        self._init_cols_to_predict = list(self._cols_to_predict)
+
     @abstractmethod
     # given a dataframe column of a numerical feature, return the value we want to replace the NaN's with
     def _calc_missing_num_replacements(self, col):
@@ -76,7 +78,8 @@ class AbstractPreprocessor(AbstractFeatures):
         self.cat_le = {}
         for col_name in self.categorical_features:
             self.cat_le[col_name] = self._gen_cat_col_encoder(col_name, training_data_frame)
-
+            
+    #Apply the preprocessing methods prepared with a certain dataset, to any given dataset
     def cook(self, df):
         #initialize engineered D.F. (must use a copy otherwise we would affect the source variable)
         df_eng = df.copy()
@@ -85,9 +88,9 @@ class AbstractPreprocessor(AbstractFeatures):
         df_eng.fillna(self.NaN_replacements, inplace = True)
         
         # encode categorical features
-        for col in self.categorical_features:
-            column_encoder = self.cat_le[col]
-            df_eng[col] = column_encoder.transform(df_eng[col])
+        for col_name in self.categorical_features:
+            column_encoder = self.cat_le[col_name]
+            df_eng[col_name] = column_encoder.transform(df_eng[col_name])
         
         #feature engineering
         self._feat_eng(df_eng)
@@ -96,12 +99,13 @@ class AbstractPreprocessor(AbstractFeatures):
 
         return df_eng
     
+    #apply cook and then separate the resulting dataset in two: X and y
     def cook_and_split(self, df):
         df_eng = self.cook(df)
-        if self._is_trainning_set(df_eng):
+        if self._is_trainning_set(df):
             #returning X and y separately for the training set
             return (df_eng.loc[:, [col for col in df_eng.columns if col not in self._cols_to_predict]], 
-                               df_eng.loc[:, self._cols_to_predict])
+                    df_eng.loc[:, self._cols_to_predict])
         else:
             return df_eng, pd.DataFrame()
         
@@ -112,5 +116,8 @@ class AbstractPreprocessor(AbstractFeatures):
     def get_cols_to_predict(self):
         return self._cols_to_predict
     
-    def append_cols_to_predict(self, new_col_name):
-        self._cols_to_predict.append(new_col_name)
+    def get_init_cols_to_predict(self):
+        return self._init_cols_to_predict
+    
+    def set_cols_to_predict(self, new_cols_list):
+        self._cols_to_predict = new_cols_list

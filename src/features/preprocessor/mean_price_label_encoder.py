@@ -51,23 +51,26 @@ class Mean_Price_Preprocessor(AbstractPreprocessor):
         return 'NaN'
     
     def _gen_cat_col_encoder(self, col_name, df = pd.DataFrame()):
-        col_encoder = mean_pred_encoder(self.get_cols_to_predict()[0], col_name)
+        col_encoder = mean_pred_encoder(self.get_init_cols_to_predict()[0], col_name)
         col_encoder.fit(df.fillna('NaN'))
         return col_encoder
     
     # Check if this is training set by looking for the output column called "SalePrice"
     def _is_trainning_set(self, dataframe):
-        for col in self.get_cols_to_predict():
+        for col in self.get_init_cols_to_predict() + self.get_cols_to_predict():
             if col in dataframe.columns:
                 return True
         return False
 
     # Create a column with the log of the saleprice
     def _feat_eng_train(self, dataframe):
-        cols_to_apply_log = list(self.get_cols_to_predict())
+        #use list() to create a new instance
+        cols_to_apply_log = list(self.get_init_cols_to_predict())
+        
         for col_name in cols_to_apply_log:
             dataframe["Log_" + col_name] = np.log(dataframe[col_name])
-            self.append_cols_to_predict("Log_" + col_name)
+            dataframe.drop(col_name, 1, inplace = True)
+            self.set_cols_to_predict(["Log_" + col_name])
             
     def _feat_eng(self, dataframe):
         for col_name in dataframe.select_dtypes(exclude = [np.number]):
