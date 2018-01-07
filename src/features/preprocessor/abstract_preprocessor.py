@@ -90,19 +90,27 @@ class AbstractPreprocessor(AbstractFeatures):
             df_eng[col] = column_encoder.transform(df_eng[col])
         
         #feature engineering
-        self._feat_eng(df)
-        if self._is_trainning_set(df):
-            self._feat_eng_train(df)
-            
+        self._feat_eng(df_eng)
+        if self._is_trainning_set(df_eng):
+            self._feat_eng_train(df_eng)
+
+        return df_eng
+    
+    def cook_and_split(self, df):
+        df_eng = self.cook(df)
+        if self._is_trainning_set(df_eng):
             #returning X and y separately for the training set
             return (df_eng.loc[:, [col for col in df_eng.columns if col not in self._cols_to_predict]], 
                                df_eng.loc[:, self._cols_to_predict])
+        else:
+            return df_eng, pd.DataFrame()
         
-        return df_eng
-    
     def prepare_and_cook(self, training_data_frame):
         self.prepare(training_data_frame)
         return self.cook(training_data_frame)
     
     def get_cols_to_predict(self):
         return self._cols_to_predict
+    
+    def append_cols_to_predict(self, new_col_name):
+        self._cols_to_predict.append(new_col_name)
