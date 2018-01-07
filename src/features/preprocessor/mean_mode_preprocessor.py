@@ -34,12 +34,16 @@ class Mean_Mode_Preprocessor(AbstractPreprocessor):
     
     # For categorical features, replace nan with the string "NaN" and apply labelencoding 
     #(also add the value Nan in case it appears in the test set and not in the train)
-    def _gen_cat_col_encoder(self, col):
-        return LabelEncoder().fit(col.fillna('NaN').append(pd.DataFrame(['NaN'])))
+    def _gen_cat_col_encoder(self, col_name, df=pd.DataFrame()):
+        return LabelEncoder().fit(df[col_name].fillna('NaN').append(pd.DataFrame(['NaN'])).values.ravel())
     
     # Check if this is training set by looking for the output column called "SalePrice"
     def _is_trainning_set(self, dataframe):
-        return "SalePrice" in dataframe.columns
+        for col in self.get_cols_to_predict():
+            if col not in dataframe.columns:
+                return False
+        return True
+        #return self.get_col_to_predict() in dataframe.columns
     
     # Don't create any new features for both datasets
     def _feat_eng(self, dataframe):
@@ -47,8 +51,9 @@ class Mean_Mode_Preprocessor(AbstractPreprocessor):
     
     # Create a column with the log of the saleprice
     def _feat_eng_train(self, dataframe):
-        dataframe["logSalePrice"] = np.log(dataframe.SalePrice)
-    
+        for col in self.get_cols_to_predict():
+            dataframe["Log_" + col] = np.log(dataframe[col])
+
 
 #%% Testing
 
@@ -56,6 +61,6 @@ if __name__ == '__main__':
     train_dataframe = pd.read_csv('..\\input\\train.csv', index_col='Id')
     test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
 
-    data_preprocessor = Mean_Mode_Preprocessor()
-    eng_train_dataset = data_preprocessor.prepare(train_dataframe)
+    data_preprocessor = Mean_Mode_Preprocessor(["SalePrice"])
+    eng_train_dataset = data_preprocessor.prepare_and_cook(train_dataframe)
     eng_test_dataset = data_preprocessor.cook(test_dataframe)
