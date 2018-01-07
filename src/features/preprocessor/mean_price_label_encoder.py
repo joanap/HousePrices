@@ -25,12 +25,12 @@ class mean_pred_encoder():
         self.col_name = cat_col_name
     
     def fit(self, df):
-        col = df[self.col_name]
+        col = df[self.col_name].append(pd.DataFrame(['NaN']))[0]
         new_df = pd.DataFrame()
         new_df['vals'] = col.unique()
         new_df.index = new_df.vals
         new_df['mean'] = df[[self.col_name, self.feature_to_predict]].groupby(self.col_name).mean()[self.feature_to_predict]
-        self.means = new_df['mean'].to_dict()
+        self.means = new_df.fillna(new_df.mean())['mean'].to_dict()
             
     def transform(self, col):
         new_col = col.copy()
@@ -64,23 +64,30 @@ class Mean_Price_Preprocessor(AbstractPreprocessor):
 
     # Create a column with the log of the saleprice
     def _feat_eng_train(self, dataframe):
-        for col_name in self.get_cols_to_predict():
+        cols_to_apply_log = list(self.get_cols_to_predict())
+        for col_name in cols_to_apply_log:
             dataframe["Log_" + col_name] = np.log(dataframe[col_name])
-    
+            self.append_cols_to_predict("Log_" + col_name)
+            
     def _feat_eng(self, dataframe):
-        pass
+        for col_name in dataframe.select_dtypes(exclude = [np.number]):
+            dataframe[col_name] = pd.to_numeric(dataframe[col_name])
+            
 
 #%% Testing
 
 if __name__ == '__main__':
+    data_preprocessor = Mean_Price_Preprocessor(["SalePrice"])
+    
     train_dataframe = pd.read_csv('..\\input\\train.csv', index_col='Id')
     test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
 
-    data_preprocessor = Mean_Price_Preprocessor(["SalePrice"])
     data_preprocessor.prepare(train_dataframe)
-    X_train, y_train = data_preprocessor.cook(train_dataframe)
-    X_test = data_preprocessor.cook(test_dataframe)
+    X_train, y_train = data_preprocessor.cook_and_split(train_dataframe)
+    X_test, _ = data_preprocessor.cook_and_split(test_dataframe)
     #tests
     #test if there are any NaNs
     assert(X_train.isnull().sum().sum() == 0)
     assert(X_test.isnull().sum().sum() == 0)
+    assert(X_train.select_dtypes(exclude = [np.number]).shape[1] == 0)
+    assert(X_test.select_dtypes(exclude = [np.number]).shape[1] == 0)
