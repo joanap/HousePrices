@@ -62,5 +62,9 @@ if __name__ == '__main__':
     test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
 
     data_preprocessor = Mean_Mode_Preprocessor(["SalePrice"])
-    eng_train_dataset = data_preprocessor.prepare_and_cook(train_dataframe)
-    eng_test_dataset = data_preprocessor.cook(test_dataframe)
+    X_train, y_train = data_preprocessor.prepare_and_cook(train_dataframe)
+    X_test = data_preprocessor.cook(test_dataframe)
+    #tests
+    #test if there are any NaNs
+    assert(X_train.isnull().sum().sum() == 0)
+    assert(X_test.isnull().sum().sum() == 0)

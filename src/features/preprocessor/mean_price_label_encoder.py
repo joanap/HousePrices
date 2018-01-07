@@ -48,9 +48,7 @@ class Mean_Price_Preprocessor(AbstractPreprocessor):
 
     # replace missing labels with the most common one (only when the NaNs are less than 10% of the full dataset)
     def _calc_missing_cat_replacements(self, col):
-        if col.count() / col.shape[0] > 0.90:
-            return 'NaN'
-        return np.nan
+        return 'NaN'
     
     def _gen_cat_col_encoder(self, col_name, df = pd.DataFrame()):
         col_encoder = mean_pred_encoder(self.get_cols_to_predict()[0], col_name)
@@ -79,6 +77,10 @@ if __name__ == '__main__':
     test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
 
     data_preprocessor = Mean_Price_Preprocessor(["SalePrice"])
-    eng_train_dataset = data_preprocessor.prepare(train_dataframe)
-    eng_train_dataset = data_preprocessor.cook(train_dataframe)
-    eng_test_dataset = data_preprocessor.cook(test_dataframe)
+    data_preprocessor.prepare(train_dataframe)
+    X_train, y_train = data_preprocessor.cook(train_dataframe)
+    X_test = data_preprocessor.cook(test_dataframe)
+    #tests
+    #test if there are any NaNs
+    assert(X_train.isnull().sum().sum() == 0)
+    assert(X_test.isnull().sum().sum() == 0)

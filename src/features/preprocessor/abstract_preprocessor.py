@@ -93,6 +93,10 @@ class AbstractPreprocessor(AbstractFeatures):
         self._feat_eng(df)
         if self._is_trainning_set(df):
             self._feat_eng_train(df)
+            
+            #returning X and y separately for the training set
+            return (df_eng.loc[:, [col for col in df_eng.columns if col not in self._cols_to_predict]], 
+                               df_eng.loc[:, self._cols_to_predict])
         
         return df_eng
     
