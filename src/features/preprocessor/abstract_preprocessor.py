@@ -23,6 +23,12 @@ import numpy as np
 class AbstractPreprocessor(AbstractFeatures):
     __metaclass__ = ABCMeta
     
+    def __init__(self, output_cols):
+        if isinstance(output_cols, list):
+            self._cols_to_predict = output_cols
+        else:
+            self._cols_to_predict = [output_cols]
+    
     @abstractmethod
     # given a dataframe column of a numerical feature, return the value we want to replace the NaN's with
     def _calc_missing_num_replacements(self, col):
@@ -68,8 +74,8 @@ class AbstractPreprocessor(AbstractFeatures):
         
         # Prepare label encoding (we'll need one encoder per column)
         self.cat_le = {}
-        for col in self.categorical_features:
-            self.cat_le[col] = self._gen_cat_col_encoder(training_data_frame[col])
+        for col_name in self.categorical_features:
+            self.cat_le[col_name] = self._gen_cat_col_encoder(col_name, training_data_frame)
 
     def cook(self, df):
         #initialize engineered D.F. (must use a copy otherwise we would affect the source variable)
@@ -93,3 +99,6 @@ class AbstractPreprocessor(AbstractFeatures):
     def prepare_and_cook(self, training_data_frame):
         self.prepare(training_data_frame)
         return self.cook(training_data_frame)
+    
+    def get_cols_to_predict(self):
+        return self._cols_to_predict
