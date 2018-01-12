@@ -13,7 +13,7 @@ from features.preprocessor.mean_price_label_encoder import Mean_Price_Preprocess
 from features.preprocessor.mean_mode_preprocessor import Mean_Mode_Preprocessor
 
 from sklearn.linear_model import ElasticNetCV
-
+from sklearn import svm
 #%% 0.2 Import datasets
 train_dataframe = pd.read_csv('..\\input\\train.csv', index_col='Id')
 test_dataframe = pd.read_csv("..\\input\\test.csv", index_col='Id')
@@ -36,6 +36,22 @@ regr.fit(X_train, y_train)
 print(regr.alpha_)
 pred = regr.predict(X_test)
 
-y_pred = pd.DataFrame(np.exp(pred), index = X_test.index, columns = ['SalePrice'])
+y_pred = pd.DataFrame(np.exp(pred), 
+                      index = X_test.index, 
+                      columns = ['SalePrice'])
 y_pred.to_csv('..\\Submissions\\elastic_net_1.csv')
 #score:     0.133
+
+
+#%% SVR
+clf = svm.SVR()
+clf.fit(X_train, y_train)
+pred = clf.predict(X_test)
+
+y_pred = pd.DataFrame(np.exp(pred), 
+                      index = X_test.index, 
+                      columns = ['SalePrice'])
+
+y_pred.to_csv('..\\Submissions\\SupportVectorRegressor.csv')
+
+# score:    0.4...
