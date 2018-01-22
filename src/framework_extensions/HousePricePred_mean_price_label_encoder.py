@@ -42,6 +42,16 @@ class mean_pred_encoder():
 #%% Implementing class with our one version of the preprocessing methods
 
 class Mean_Price_Preprocessor(AbstractPreprocessor):
+    # replace missing labels with the most common one (only when the NaNs are less than 10% of the full dataset)
+    def _calc_missing_cat_replacements(self, col):
+        if col.count() / col.shape[0] > 0.90:
+            return col.value_counts().index[0]
+        return 'NaN'
+
+    # replace missing numerical values with the mean  
+    def _calc_missing_num_replacements(self, col):
+        return col.mean()
+    
     # generate attribute that will store all the encoders in a dictionary
     def _set_cat_col_encoder(self, df):
         self.cat_encoders = {}

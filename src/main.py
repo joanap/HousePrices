@@ -9,8 +9,8 @@ Created on Sat Dec 30 15:02:38 2017
 import pandas as pd
 import numpy as np
 
-from features.preprocessor.mean_price_label_encoder import Mean_Price_Preprocessor
-from features.preprocessor.mean_mode_preprocessor import Mean_Mode_Preprocessor
+from framework_extensions.HousePricePred_mean_price_label_encoder import Mean_Price_Preprocessor
+from framework_extensions.HousePricePred_mean_mode_preprocessor import Mean_Mode_Preprocessor
 
 from sklearn.linear_model import ElasticNetCV
 from sklearn import svm

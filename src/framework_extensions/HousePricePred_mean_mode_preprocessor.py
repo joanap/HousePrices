@@ -23,10 +23,14 @@ from sklearn.preprocessing import LabelEncoder
 class Mean_Mode_Preprocessor(AbstractPreprocessor):
 
     # replace missing labels with the most common one (only when the NaNs are less than 10% of the full dataset)
-    def _set_missing_cat_replacements(self, col):
+    def _calc_missing_cat_replacements(self, col):
         if col.count() / col.shape[0] > 0.90:
             return col.value_counts().index[0]
         return 'NaN'
+
+    # replace missing numerical values with the mean  
+    def _calc_missing_num_replacements(self, col):
+        return col.mean()
     
     # set of dependent variables is only the last one (the one added in feat. eng.)
     def get_y(self, df):
