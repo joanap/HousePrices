@@ -47,7 +47,7 @@ def calc_r2(vfeats):
     k = len(x.columns)
     return 1 - (1-r2)*(n-1)/(n-k-1)
 
-#%% 
+#%%
 
 vfeats = []
 res= []
@@ -63,7 +63,7 @@ for num_feats in range(m):
     print("{} features. Max adj R2 of {}. New feat added was {}:{}".format(num_feats + 1, R2_max,arg_R2_max,numdf.columns[arg_R2_max]))
     vfeats.append(arg_R2_max)
     res.append([num_feats,R2_max])
-    
+
 res = np.array(res)
 plt.scatter(res[:,0],res[:,1])
 X=vfeats[:19]
@@ -77,7 +77,6 @@ dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_14feats.csv", index = False)
 ### "Your submission scored 0.14355, "  1083rd place!!!!
 
-<<<<<<< HEAD
 #%% predict using ridge regression
 reg = lm.RidgeCV(alphas = [0.01,0.02,0.03,0.5,0.7,.9],normalize=True)
 reg.fit(dfclean[X],y)
@@ -87,7 +86,7 @@ pred=np.exp(reg.predict(df_testclean[vfeats[:19]]))
 
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_ridge.csv", index = False)
-# score=0.14298 even worse booo 
+# score=0.14298 even worse booo
 #%% Let's try Lasso
 regl = lm.LassoCV(alphas = [1e-5,1e-4,1e-3,1e-2,1e-1],normalize=True)
 regl.fit(dfclean[X],y)
@@ -97,20 +96,14 @@ pred=np.exp(regl.predict(df_testclean[vfeats[:19]]))
 
 dfpred = pd.concat([dftest.Id,pd.DataFrame(pred,columns=["SalePrice"])],axis=1)
 dfpred.to_csv("submission_Lasso.csv", index = False)
-=======
+
 #cross validation
 def crossValidation(inputSet):
     kf = KFold(n_splits=10)
-    for train, test in kf.split(inputSet):   
+    for train, test in kf.split(inputSet):
         #print("%s %s" % (train, test))
         lr.fit(inputSet.loc[train], y.loc[train])
         pred_cv = lr.predict(inputSet.loc[test])
         mean_squared_error(y.loc[test], pred_cv)
 
 crossValidation(dfclean[vfeats[:14]])
-
-
-        
-        
-        
->>>>>>> 6ea1b5dfa12e4cac6ab69837134c1f09e08c0f3d
